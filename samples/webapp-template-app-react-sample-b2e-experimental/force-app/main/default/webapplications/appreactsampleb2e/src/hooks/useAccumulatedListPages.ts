@@ -19,8 +19,10 @@ export function useAccumulatedListPages<T>(
 		const justFinishedLoading = prevLoadingRef.current && !loading;
 		if (justFinishedLoading) {
 			const list = edges.map((e) => mapNode(e.node));
-			if (isFirstPage) setAccumulated(list);
-			else setAccumulated((prev) => [...prev, ...list]);
+			queueMicrotask(() => {
+				if (isFirstPage) setAccumulated(list);
+				else setAccumulated((prev) => [...prev, ...list]);
+			});
 		}
 		prevLoadingRef.current = loading;
 	}, [loading, edges, afterCursor, mapNode]);

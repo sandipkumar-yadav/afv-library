@@ -35,10 +35,10 @@ export function useObjectInfoBatch(objectApiNames: string[]): UseObjectInfoBatch
 		isCancelled.current = false;
 		const names = objectApiNames.filter(Boolean);
 		if (names.length === 0) {
-			setState({ objectInfos: [], loading: false, error: null });
+			queueMicrotask(() => setState({ objectInfos: [], loading: false, error: null }));
 			return;
 		}
-		setState((s) => ({ ...s, loading: true, error: null }));
+		queueMicrotask(() => setState((s) => ({ ...s, loading: true, error: null })));
 		objectInfoService
 			.getObjectInfoBatch(names.join(","))
 			.then((res) => {
@@ -59,7 +59,7 @@ export function useObjectInfoBatch(objectApiNames: string[]): UseObjectInfoBatch
 		return () => {
 			isCancelled.current = true;
 		};
-	}, [objectApiNames.join(",")]);
+	}, [objectApiNames]);
 
 	return state;
 }

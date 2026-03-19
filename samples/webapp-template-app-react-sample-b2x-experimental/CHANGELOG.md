@@ -3,6 +3,108 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.109.3](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.109.2...v1.109.3) (2026-03-19)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.109.2](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.109.1...v1.109.2) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.109.1](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.109.0...v1.109.1) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+# [1.109.0](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.108.1...v1.109.0) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.108.1](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.108.0...v1.108.1) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+# [1.108.0](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.6...v1.108.0) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.107.6](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.5...v1.107.6) (2026-03-18)
+
+
+### Bug Fixes
+
+* skill validation and remove default Vite favicon from templates ([#311](https://github.com/salesforce-experience-platform-emu/webapps/issues/311)) ([fde4269](https://github.com/salesforce-experience-platform-emu/webapps/commit/fde42696c5fb81b561137ce3d60b30c8f5329060))
+
+
+
+
+
+## [1.107.5](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.4...v1.107.5) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.107.4](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.3...v1.107.4) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.107.3](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.2...v1.107.3) (2026-03-18)
+
+
+### Bug Fixes
+
+* **lint-and-metadata:** Linting in template apps, metadata and query fixes, and skills for deployment orders ([#304](https://github.com/salesforce-experience-platform-emu/webapps/issues/304)) ([980b931](https://github.com/salesforce-experience-platform-emu/webapps/commit/980b9318cba0f7d5d93620e08bf4138df51b3700))
+
+
+
+
+
+## [1.107.2](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.1...v1.107.2) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
+## [1.107.1](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.107.0...v1.107.1) (2026-03-18)
+
+**Note:** Version bump only for package @salesforce/webapp-template-base-sfdx-project-experimental
+
+
+
+
+
 # [1.107.0](https://github.com/salesforce-experience-platform-emu/webapps/compare/v1.106.2...v1.107.0) (2026-03-17)
 
 

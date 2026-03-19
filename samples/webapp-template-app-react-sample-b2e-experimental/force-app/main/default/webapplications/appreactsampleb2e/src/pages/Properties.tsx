@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { type FilterCriteria } from "../features/global-search/types/filters/filters";
 import { useObjectListMetadata } from "../features/global-search/hooks/useObjectSearchData";
@@ -76,27 +76,29 @@ export default function Properties() {
 		if (filters.length === 0) return;
 		if (!hasInitializedFiltersRef.current) {
 			hasInitializedFiltersRef.current = true;
-			setFilterFormValues(getDefaultFilterFormValues(filters));
+			queueMicrotask(() => setFilterFormValues(getDefaultFilterFormValues(filters)));
 		}
 	}, [filters]);
 
 	useEffect(() => {
-		setAfterCursor(null);
-		setAccumulated([]);
+		queueMicrotask(() => {
+			setAfterCursor(null);
+			setAccumulated([]);
+		});
 	}, [searchQuery, appliedFilters, setAccumulated]);
 
 	const hasNextPage = Boolean(pageInfo?.hasNextPage);
 	const endCursor = pageInfo?.endCursor ?? null;
 
-	const handleLoadMore = useCallback(() => {
+	const handleLoadMore = () => {
 		if (endCursor && !searchQuery.trim()) setAfterCursor(endCursor);
-	}, [endCursor, searchQuery]);
+	};
 
-	const handlePropertyClick = useCallback((property: Property) => {
+	const handlePropertyClick = (property: Property) => {
 		setSelectedProperty(property);
-	}, []);
+	};
 
-	const handleApplyFilters = useCallback(() => {
+	const handleApplyFilters = () => {
 		setFilterError(null);
 		const result = buildFilterCriteriaFromFormValues(
 			GLOBAL_SEARCH_OBJECT_API_NAME,
@@ -109,19 +111,19 @@ export default function Properties() {
 		}
 		setAppliedFilters(result.criteria);
 		setAfterCursor(null);
-	}, [filters, filterFormValues]);
+	};
 
-	const handleResetFilters = useCallback(() => {
+	const handleResetFilters = () => {
 		setFilterFormValues(getDefaultFilterFormValues(filters));
 		setAppliedFilters([]);
 		setAfterCursor(null);
 		setFilterError(null);
-	}, [filters]);
+	};
 
-	const handleFilterFormValueChange = useCallback((key: string, value: string) => {
+	const handleFilterFormValueChange = (key: string, value: string) => {
 		setFilterFormValues((prev) => ({ ...prev, [key]: value }));
 		setFilterError(null);
-	}, []);
+	};
 
 	const loading = listMeta.loading || resultsLoading;
 	const error = listMeta.error ?? resultsError;

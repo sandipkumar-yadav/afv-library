@@ -92,13 +92,15 @@ export function useListPage<T>(config: ListPageConfig<T>): UseListPageResult<T> 
 		if (filters.length === 0) return;
 		if (!hasInitializedFiltersRef.current) {
 			hasInitializedFiltersRef.current = true;
-			setFilterFormValues(getDefaultFilterFormValues(filters));
+			queueMicrotask(() => setFilterFormValues(getDefaultFilterFormValues(filters)));
 		}
 	}, [filters]);
 
 	useEffect(() => {
-		setAfterCursor(null);
-		setAccumulated([]);
+		queueMicrotask(() => {
+			setAfterCursor(null);
+			setAccumulated([]);
+		});
 	}, [searchQuery, appliedFilters, effectiveSort, setAccumulated]);
 
 	const loading = listMeta.loading || resultsLoading;
@@ -106,11 +108,11 @@ export function useListPage<T>(config: ListPageConfig<T>): UseListPageResult<T> 
 	const hasNextPage = Boolean(pageInfo?.hasNextPage);
 	const endCursor = pageInfo?.endCursor ?? null;
 
-	const onLoadMore = useCallback(() => {
+	const onLoadMore = () => {
 		if (endCursor && !searchQuery.trim()) setAfterCursor(endCursor);
-	}, [endCursor, searchQuery]);
+	};
 
-	const onApplyFilters = useCallback(() => {
+	const onApplyFilters = () => {
 		setFilterError(null);
 		const result = buildFilterCriteriaFromFormValues(
 			config.objectApiName,
@@ -123,24 +125,24 @@ export function useListPage<T>(config: ListPageConfig<T>): UseListPageResult<T> 
 		}
 		setAppliedFilters(result.criteria);
 		setAfterCursor(null);
-	}, [config.objectApiName, filters, filterFormValues]);
+	};
 
-	const onResetFilters = useCallback(() => {
+	const onResetFilters = () => {
 		setFilterFormValues(getDefaultFilterFormValues(filters));
 		setAppliedFilters([]);
 		setAfterCursor(null);
 		setFilterError(null);
-	}, [filters]);
+	};
 
-	const onFormValueChange = useCallback((key: string, value: string) => {
+	const onFormValueChange = (key: string, value: string) => {
 		setFilterFormValues((prev) => ({ ...prev, [key]: value }));
 		setFilterError(null);
-	}, []);
+	};
 
-	const onSortChange = useCallback((newSortBy: string) => {
+	const onSortChange = (newSortBy: string) => {
 		setSortBy(newSortBy);
 		setAfterCursor(null);
-	}, []);
+	};
 
 	const result: UseListPageResult<T> = {
 		filters,

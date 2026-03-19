@@ -130,7 +130,7 @@ export default function Application() {
 					<p className="text-sm text-muted-foreground">
 						Your application has been saved. Reference: {submittedId}
 					</p>
-					<div className="mt-4 flex gap-2">
+					<div className="mt-4 flex gap-2 items-center">
 						<Link to="/properties" className="text-sm text-primary no-underline hover:underline">
 							Back to search
 						</Link>
