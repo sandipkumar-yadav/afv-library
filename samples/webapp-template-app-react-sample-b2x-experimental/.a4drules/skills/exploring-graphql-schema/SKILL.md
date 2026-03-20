@@ -11,6 +11,13 @@ paths:
 
 Guidance for AI agents working with the Salesforce GraphQL API schema. **GREP ONLY** — the schema file is very large (~265,000+ lines). All lookups MUST use grep; do NOT open, read, stream, or parse the file.
 
+## Deployment Prerequisites
+
+The schema reflects the **current org state**. Custom objects and fields appear only after metadata is deployed.
+
+- **Before** running `npm run graphql:schema`: Deploy all metadata (objects, permission sets, layouts) and assign the permission set to the target user. Invoke the `deploying-to-salesforce` skill for the full sequence.
+- **After** any metadata deployment: Re-run `npm run graphql:schema` and `npm run graphql:codegen` so types and queries stay in sync.
+
 ## Schema File Location
 
 **Location:** `schema.graphql` at the **SFDX project root** (NOT inside the webapp dir). All grep commands **must be run from the project root** where `schema.graphql` lives.
@@ -92,24 +99,6 @@ Search for `input <ObjectName>CreateInput` or `input <ObjectName>UpdateInput`:
 # Example: Find Account create input (anchored)
 grep -nE '^input[[:space:]]+AccountCreateInput\b' ./schema.graphql -A 30
 ```
-
-## Common Operator Types
-
-- **StringOperators**: `eq`, `ne`, `like`, `lt`, `gt`, `lte`, `gte`, `in`, `nin`
-- **OrderByClause**: `order: ResultOrder` (ASC/DESC), `nulls: NullOrder` (FIRST/LAST)
-
-## Field Value Wrappers
-
-Salesforce GraphQL returns field values wrapped in typed objects:
-
-| Wrapper Type    | Access Pattern                     |
-| --------------- | ---------------------------------- |
-| `StringValue`   | `FieldName { value }`              |
-| `IntValue`      | `FieldName { value }`              |
-| `BooleanValue`  | `FieldName { value }`              |
-| `DateTimeValue` | `FieldName { value displayValue }` |
-| `PicklistValue` | `FieldName { value displayValue }` |
-| `CurrencyValue` | `FieldName { value displayValue }` |
 
 ## Agent Workflow for Building Queries (grep-only)
 

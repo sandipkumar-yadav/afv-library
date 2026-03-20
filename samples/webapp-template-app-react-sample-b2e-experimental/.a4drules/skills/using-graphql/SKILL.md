@@ -59,7 +59,8 @@ The base React app (`base-react-app`) ships with all GraphQL dependencies and to
 Before using this skill, ensure:
 
 1. The `@salesforce/sdk-data` package is available (provides `createDataSDK`, `gql`, `NodeOfConnection`)
-2. A `schema.graphql` file exists at the project root. If missing, generate it:
+2. **Deployment order**: Metadata must be deployed before schema fetch; schema must be refetched after any metadata deployment. Invoke the `deploying-to-salesforce` skill when deploying or syncing with the org.
+3. A `schema.graphql` file exists at the project root. If missing, generate it:
    ```bash
    # Run from webapp dir (force-app/main/default/webapplications/<app-name>/)
    npm run graphql:schema
