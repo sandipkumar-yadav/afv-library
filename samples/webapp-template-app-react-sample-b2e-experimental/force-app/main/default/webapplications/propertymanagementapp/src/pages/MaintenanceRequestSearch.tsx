@@ -18,12 +18,13 @@ import type { SortFieldConfig } from "../features/object-search/utils/sortUtils"
 import { PageHeader } from "../components/layout/PageHeader";
 import { PageContainer } from "../components/layout/PageContainer";
 import {
+	FilterApplyButton,
 	FilterProvider,
 	FilterResetButton,
 } from "../features/object-search/components/FilterContext";
 import { FilterRow } from "../components/layout/FilterRow";
 import { SearchFilter } from "../features/object-search/components/filters/SearchFilter";
-import { SelectFilter } from "../features/object-search/components/filters/SelectFilter";
+import { MultiSelectFilter } from "../features/object-search/components/filters/MultiSelectFilter";
 import { DateFilter } from "../features/object-search/components/filters/DateFilter";
 import { ObjectSearchErrorState } from "../components/shared/ObjectSearchErrorState";
 import PaginationControls from "../features/object-search/components/PaginationControls";
@@ -51,6 +52,7 @@ import type {
 	Maintenance_Request__C_Filter,
 	Maintenance_Request__C_OrderBy,
 } from "../api/graphql-operations-types";
+import { ResultOrder } from "../api/graphql-operations-types";
 import { cn } from "../lib/utils";
 
 const issueIcons: Record<string, string> = {
@@ -100,21 +102,23 @@ export default function MaintenanceRequestSearch() {
 		{ key: "distinctMaintenanceRequestPriority", ttl: 30_000 },
 	);
 
-	const { filters, query, pagination, resetAll } = useObjectSearchParams<
+	const { filters, filterState, query, pagination, resetAll } = useObjectSearchParams<
 		Maintenance_Request__C_Filter,
 		Maintenance_Request__C_OrderBy
-	>(FILTER_CONFIGS, SORT_CONFIGS, PAGINATION_CONFIG);
-
-	const searchKey = `maintenance-requests:${JSON.stringify({ where: query.where, orderBy: query.orderBy, first: pagination.pageSize, after: pagination.afterCursor })}`;
+	>(FILTER_CONFIGS, SORT_CONFIGS, PAGINATION_CONFIG, { filterSyncMode: "manual" });
+	const effectiveOrderBy: Maintenance_Request__C_OrderBy = query.orderBy ?? {
+		CreatedDate: { order: ResultOrder.Desc },
+	};
+	const searchKey = `maintenance-requests:${JSON.stringify({ where: query.where, orderBy: effectiveOrderBy, first: pagination.pageSize, after: pagination.afterCursor })}`;
 	const { data, loading, error } = useCachedAsyncData(
 		() =>
 			searchMaintenanceRequests({
 				where: query.where,
-				orderBy: query.orderBy,
+				orderBy: effectiveOrderBy,
 				first: pagination.pageSize,
 				after: pagination.afterCursor,
 			}),
-		[query.where, query.orderBy, pagination.pageSize, pagination.afterCursor],
+		[query.where, effectiveOrderBy, pagination.pageSize, pagination.afterCursor],
 		{ key: searchKey },
 	);
 
@@ -163,6 +167,7 @@ export default function MaintenanceRequestSearch() {
 				/>
 				<MaintenanceRequestSearchFilters
 					filters={filters}
+					filterState={filterState}
 					statusOptions={statusOptions ?? []}
 					typeOptions={typeOptions ?? []}
 					priorityOptions={priorityOptions ?? []}
@@ -220,6 +225,7 @@ export default function MaintenanceRequestSearch() {
 
 function MaintenanceRequestSearchFilters({
 	filters,
+	filterState,
 	statusOptions,
 	typeOptions,
 	priorityOptions,
@@ -229,6 +235,10 @@ function MaintenanceRequestSearchFilters({
 		Maintenance_Request__C_Filter,
 		Maintenance_Request__C_OrderBy
 	>["filters"];
+	filterState: UseObjectSearchParamsReturn<
+		Maintenance_Request__C_Filter,
+		Maintenance_Request__C_OrderBy
+	>["filterState"];
 	statusOptions: Array<{ value: string; label: string }>;
 	typeOptions: Array<{ value: string; label: string }>;
 	priorityOptions: Array<{ value: string; label: string }>;
@@ -240,6 +250,9 @@ function MaintenanceRequestSearchFilters({
 			onFilterChange={filters.set}
 			onFilterRemove={filters.remove}
 			onReset={resetAll}
+			onApply={filterState.apply}
+			hasPendingChanges={filterState.hasPendingChanges}
+			hasValidationError={filterState.hasValidationError}
 		>
 			<FilterRow ariaLabel="Maintenance Requests filters">
 				<SearchFilter
@@ -248,25 +261,26 @@ function MaintenanceRequestSearchFilters({
 					placeholder="Search by name..."
 					className="w-full sm:w-50"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Status__c"
 					label="Status"
 					options={statusOptions}
 					className="w-full sm:w-36"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Type__c"
 					label="Type"
 					options={typeOptions}
 					className="w-full sm:w-36"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Priority__c"
 					label="Priority"
 					options={priorityOptions}
 					className="w-full sm:w-36"
 				/>
 				<DateFilter field="Scheduled__c" label="Scheduled" className="w-full sm:w-56" />
+				<FilterApplyButton className="h-8 px-3 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed transition-colors" />
 				<FilterResetButton />
 			</FilterRow>
 		</FilterProvider>

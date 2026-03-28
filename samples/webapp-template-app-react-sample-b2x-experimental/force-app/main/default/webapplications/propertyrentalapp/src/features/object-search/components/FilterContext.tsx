@@ -7,6 +7,9 @@ interface FilterContextValue {
 	onFilterChange: (field: string, value: ActiveFilterValue | undefined) => void;
 	onFilterRemove: (field: string) => void;
 	onReset: () => void;
+	onApply: () => void;
+	hasPendingChanges: boolean;
+	hasValidationError: boolean;
 }
 
 const FilterContext = createContext<FilterContextValue | null>(null);
@@ -16,6 +19,9 @@ interface FilterProviderProps {
 	onFilterChange: (field: string, value: ActiveFilterValue | undefined) => void;
 	onFilterRemove: (field: string) => void;
 	onReset: () => void;
+	onApply?: () => void;
+	hasPendingChanges?: boolean;
+	hasValidationError?: boolean;
 	children: ReactNode;
 }
 
@@ -24,10 +30,23 @@ export function FilterProvider({
 	onFilterChange,
 	onFilterRemove,
 	onReset,
+	onApply,
+	hasPendingChanges = false,
+	hasValidationError = false,
 	children,
 }: FilterProviderProps) {
 	return (
-		<FilterContext.Provider value={{ filters, onFilterChange, onFilterRemove, onReset }}>
+		<FilterContext.Provider
+			value={{
+				filters,
+				onFilterChange,
+				onFilterRemove,
+				onReset,
+				onApply: onApply ?? (() => {}),
+				hasPendingChanges,
+				hasValidationError,
+			}}
+		>
 			{children}
 		</FilterContext.Provider>
 	);
@@ -56,11 +75,17 @@ export function useFilterField(field: string) {
 }
 
 export function useFilterPanel() {
-	const { filters, onReset } = useFilterContext();
-	return { hasActiveFilters: filters.length > 0, resetAll: onReset };
+	const { filters, onReset, onApply, hasPendingChanges, hasValidationError } = useFilterContext();
+	return {
+		hasActiveFilters: filters.length > 0,
+		hasPendingChanges,
+		hasValidationError,
+		resetAll: onReset,
+		apply: onApply,
+	};
 }
 
-interface FilterResetButtonProps extends Omit<React.ComponentProps<typeof Button>, "onClick"> {}
+type FilterResetButtonProps = Omit<React.ComponentProps<typeof Button>, "onClick">;
 
 export function FilterResetButton({ children, ...props }: FilterResetButtonProps) {
 	const { hasActiveFilters, resetAll } = useFilterPanel();
@@ -68,6 +93,22 @@ export function FilterResetButton({ children, ...props }: FilterResetButtonProps
 	return (
 		<Button onClick={resetAll} aria-label="Reset filters" variant="destructive" {...props}>
 			{children ?? "Reset"}
+		</Button>
+	);
+}
+
+type FilterApplyButtonProps = Omit<React.ComponentProps<typeof Button>, "onClick" | "disabled">;
+
+export function FilterApplyButton({ children, ...props }: FilterApplyButtonProps) {
+	const { apply, hasPendingChanges, hasValidationError } = useFilterPanel();
+	return (
+		<Button
+			onClick={apply}
+			disabled={!hasPendingChanges || hasValidationError}
+			aria-label="Apply filters"
+			{...props}
+		>
+			{children ?? "Apply"}
 		</Button>
 	);
 }

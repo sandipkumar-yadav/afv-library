@@ -15,12 +15,13 @@ import type { SortFieldConfig } from "../features/object-search/utils/sortUtils"
 import { PageHeader } from "../components/layout/PageHeader";
 import { PageContainer } from "../components/layout/PageContainer";
 import {
+	FilterApplyButton,
 	FilterProvider,
 	FilterResetButton,
 } from "../features/object-search/components/FilterContext";
 import { FilterRow } from "../components/layout/FilterRow";
 import { SearchFilter } from "../features/object-search/components/filters/SearchFilter";
-import { SelectFilter } from "../features/object-search/components/filters/SelectFilter";
+import { MultiSelectFilter } from "../features/object-search/components/filters/MultiSelectFilter";
 import { TextFilter } from "../features/object-search/components/filters/TextFilter";
 import { NumericRangeFilter } from "../features/object-search/components/filters/NumericRangeFilter";
 import { DateFilter } from "../features/object-search/components/filters/DateFilter";
@@ -41,6 +42,7 @@ import type {
 	Maintenance_Worker__C_OrderBy,
 } from "../api/graphql-operations-types";
 import { PAGINATION_CONFIG } from "../lib/constants";
+import { nonNegativeNumberInputProps } from "../lib/filterUtils";
 
 const FILTER_CONFIGS: FilterFieldConfig[] = [
 	{
@@ -72,10 +74,10 @@ export default function MaintenanceWorkerSearch() {
 		ttl: 30_000,
 	});
 
-	const { filters, query, pagination, resetAll } = useObjectSearchParams<
+	const { filters, filterState, query, pagination, resetAll } = useObjectSearchParams<
 		Maintenance_Worker__C_Filter,
 		Maintenance_Worker__C_OrderBy
-	>(FILTER_CONFIGS, SORT_CONFIGS, PAGINATION_CONFIG);
+	>(FILTER_CONFIGS, SORT_CONFIGS, PAGINATION_CONFIG, { filterSyncMode: "manual" });
 
 	const searchKey = `maintenance-workers:${JSON.stringify({ where: query.where, orderBy: query.orderBy, first: pagination.pageSize, after: pagination.afterCursor })}`;
 	const { data, loading, error } = useCachedAsyncData(
@@ -109,6 +111,7 @@ export default function MaintenanceWorkerSearch() {
 				<PageHeader title="Maintenance Workers" description="View and filter maintenance workers" />
 				<MaintenanceWorkerSearchFilters
 					filters={filters}
+					filterState={filterState}
 					typeOptions={typeOptions ?? []}
 					resetAll={resetAll}
 				/>
@@ -163,6 +166,7 @@ export default function MaintenanceWorkerSearch() {
 
 function MaintenanceWorkerSearchFilters({
 	filters,
+	filterState,
 	typeOptions,
 	resetAll,
 }: {
@@ -170,6 +174,10 @@ function MaintenanceWorkerSearchFilters({
 		Maintenance_Worker__C_Filter,
 		Maintenance_Worker__C_OrderBy
 	>["filters"];
+	filterState: UseObjectSearchParamsReturn<
+		Maintenance_Worker__C_Filter,
+		Maintenance_Worker__C_OrderBy
+	>["filterState"];
 	typeOptions: Array<{ value: string; label: string }>;
 	resetAll: () => void;
 }) {
@@ -179,6 +187,9 @@ function MaintenanceWorkerSearchFilters({
 			onFilterChange={filters.set}
 			onFilterRemove={filters.remove}
 			onReset={resetAll}
+			onApply={filterState.apply}
+			hasPendingChanges={filterState.hasPendingChanges}
+			hasValidationError={filterState.hasValidationError}
 		>
 			<FilterRow ariaLabel="Maintenance Workers filters">
 				<SearchFilter
@@ -187,7 +198,7 @@ function MaintenanceWorkerSearchFilters({
 					placeholder="By name, or phone..."
 					className="w-full sm:w-50"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Employment_Type__c"
 					label="Employment Type"
 					options={typeOptions}
@@ -199,8 +210,15 @@ function MaintenanceWorkerSearchFilters({
 					placeholder="Location"
 					className="w-full sm:w-50"
 				/>
-				<NumericRangeFilter field="Hourly_Rate__c" label="Hourly Rate" className="w-full sm:w-50" />
+				<NumericRangeFilter
+					field="Hourly_Rate__c"
+					label="Hourly Rate"
+					className="w-full sm:w-50"
+					minInputProps={nonNegativeNumberInputProps}
+					maxInputProps={nonNegativeNumberInputProps}
+				/>
 				<DateFilter field="CreatedDate" label="Created Date" className="w-full sm:w-56" />
+				<FilterApplyButton className="h-8 px-3 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed transition-colors" />
 				<FilterResetButton />
 			</FilterRow>
 		</FilterProvider>

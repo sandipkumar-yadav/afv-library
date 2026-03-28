@@ -16,12 +16,13 @@ import type { ApplicationSearchNode } from "../api/applications/applicationSearc
 import { PageHeader } from "../components/layout/PageHeader";
 import { PageContainer } from "../components/layout/PageContainer";
 import {
+	FilterApplyButton,
 	FilterProvider,
 	FilterResetButton,
 } from "../features/object-search/components/FilterContext";
 import { FilterRow } from "../components/layout/FilterRow";
 import { SearchFilter } from "../features/object-search/components/filters/SearchFilter";
-import { SelectFilter } from "../features/object-search/components/filters/SelectFilter";
+import { MultiSelectFilter } from "../features/object-search/components/filters/MultiSelectFilter";
 import { DateFilter } from "../features/object-search/components/filters/DateFilter";
 import { ObjectSearchErrorState } from "../components/shared/ObjectSearchErrorState";
 import PaginationControls from "../features/object-search/components/PaginationControls";
@@ -40,6 +41,7 @@ import type {
 	Application__C_Filter,
 	Application__C_OrderBy,
 } from "../api/graphql-operations-types";
+import { ResultOrder } from "../api/graphql-operations-types";
 import { Badge } from "../components/ui/badge";
 import { PAGINATION_CONFIG } from "../lib/constants";
 import { cn } from "../lib/utils";
@@ -74,21 +76,23 @@ export default function ApplicationSearch() {
 		ttl: 30_000,
 	});
 
-	const { filters, query, pagination, resetAll } = useObjectSearchParams<
+	const { filters, filterState, query, pagination, resetAll } = useObjectSearchParams<
 		Application__C_Filter,
 		Application__C_OrderBy
-	>(FILTER_CONFIGS, SORT_CONFIGS, PAGINATION_CONFIG);
-
-	const searchKey = `applications:${JSON.stringify({ where: query.where, orderBy: query.orderBy, first: pagination.pageSize, after: pagination.afterCursor })}`;
+	>(FILTER_CONFIGS, SORT_CONFIGS, PAGINATION_CONFIG, { filterSyncMode: "manual" });
+	const effectiveOrderBy: Application__C_OrderBy = query.orderBy ?? {
+		CreatedDate: { order: ResultOrder.Desc },
+	};
+	const searchKey = `applications:${JSON.stringify({ where: query.where, orderBy: effectiveOrderBy, first: pagination.pageSize, after: pagination.afterCursor })}`;
 	const { data, loading, error } = useCachedAsyncData(
 		() =>
 			searchApplications({
 				where: query.where,
-				orderBy: query.orderBy,
+				orderBy: effectiveOrderBy,
 				first: pagination.pageSize,
 				after: pagination.afterCursor,
 			}),
-		[query.where, query.orderBy, pagination.pageSize, pagination.afterCursor],
+		[query.where, effectiveOrderBy, pagination.pageSize, pagination.afterCursor],
 		{ key: searchKey },
 	);
 
@@ -134,6 +138,7 @@ export default function ApplicationSearch() {
 				<PageHeader title="Applications" description="Manage and review rental applications" />
 				<ApplicationSearchFilters
 					filters={filters}
+					filterState={filterState}
 					statusOptions={statusOptions ?? []}
 					resetAll={resetAll}
 				/>
@@ -188,10 +193,15 @@ export default function ApplicationSearch() {
 
 function ApplicationSearchFilters({
 	filters,
+	filterState,
 	statusOptions,
 	resetAll,
 }: {
 	filters: UseObjectSearchParamsReturn<Application__C_Filter, Application__C_OrderBy>["filters"];
+	filterState: UseObjectSearchParamsReturn<
+		Application__C_Filter,
+		Application__C_OrderBy
+	>["filterState"];
 	statusOptions: Array<{ value: string; label: string }>;
 	resetAll: () => void;
 }) {
@@ -201,6 +211,9 @@ function ApplicationSearchFilters({
 			onFilterChange={filters.set}
 			onFilterRemove={filters.remove}
 			onReset={resetAll}
+			onApply={filterState.apply}
+			hasPendingChanges={filterState.hasPendingChanges}
+			hasValidationError={filterState.hasValidationError}
 		>
 			<FilterRow ariaLabel="Applications filters">
 				<SearchFilter
@@ -209,7 +222,7 @@ function ApplicationSearchFilters({
 					placeholder="Search by name..."
 					className="w-full sm:w-50"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Status__c"
 					label="Status"
 					options={statusOptions ?? []}
@@ -217,6 +230,7 @@ function ApplicationSearchFilters({
 				/>
 				<DateFilter field="Start_Date__c" label="Start Date" className="w-full sm:w-56" />
 				<DateFilter field="CreatedDate" label="Created Date" className="w-full sm:w-56" />
+				<FilterApplyButton className="h-8 px-3 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed transition-colors" />
 				<FilterResetButton />
 			</FilterRow>
 		</FilterProvider>

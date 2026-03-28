@@ -20,6 +20,11 @@ export interface UseObjectSearchParamsReturn<TFilter, TOrderBy> {
 		set: (field: string, value: ActiveFilterValue | undefined) => void;
 		remove: (field: string) => void;
 	};
+	filterState: {
+		apply: () => void;
+		hasPendingChanges: boolean;
+		hasValidationError: boolean;
+	};
 	sort: {
 		current: SortState | null;
 		set: (sort: SortState | null) => void;
@@ -34,6 +39,40 @@ export interface UseObjectSearchParamsReturn<TFilter, TOrderBy> {
 		goToPreviousPage: () => void;
 	};
 	resetAll: () => void;
+}
+
+export interface UseObjectSearchParamsOptions {
+	filterSyncMode?: "immediate" | "manual";
+}
+
+function areFiltersEqual(left: ActiveFilterValue[], right: ActiveFilterValue[]) {
+	if (left.length !== right.length) return false;
+	const normalize = (filters: ActiveFilterValue[]) =>
+		[...filters]
+			.sort((a, b) => a.field.localeCompare(b.field))
+			.map((filter) => ({
+				field: filter.field,
+				type: filter.type,
+				value: filter.value ?? "",
+				min: filter.min ?? "",
+				max: filter.max ?? "",
+			}));
+	return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
+}
+
+function hasFilterValidationError(filters: ActiveFilterValue[]) {
+	for (const filter of filters) {
+		if (filter.type !== "numeric") continue;
+		const min = filter.min?.trim();
+		const max = filter.max?.trim();
+		if (!min || !max) continue;
+		const minValue = Number(min);
+		const maxValue = Number(max);
+		if (!Number.isNaN(minValue) && !Number.isNaN(maxValue) && minValue >= maxValue) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -59,9 +98,16 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 	filterConfigs: FilterFieldConfig[],
 	_sortConfigs?: SortFieldConfig[],
 	paginationConfig?: PaginationConfig,
+	options?: UseObjectSearchParamsOptions,
 ) {
+	const filterSyncMode = options?.filterSyncMode ?? "immediate";
+	const isManualFilterSync = filterSyncMode === "manual";
+
 	const defaultPageSize = paginationConfig?.defaultPageSize ?? 10;
-	const validPageSizes = paginationConfig?.validPageSizes ?? [defaultPageSize];
+	const validPageSizes = useMemo(
+		() => paginationConfig?.validPageSizes ?? [defaultPageSize],
+		[paginationConfig?.validPageSizes, defaultPageSize],
+	);
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	// Seed local state from URL on initial load
@@ -73,11 +119,14 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 	);
 
 	const [filters, setFilters] = useState<ActiveFilterValue[]>(initial.filters);
+	const [appliedFilters, setAppliedFilters] = useState<ActiveFilterValue[]>(initial.filters);
 	const [sort, setLocalSort] = useState<SortState | null>(initial.sort);
 
 	// Pagination — cursor-based with a stack to support "previous page" navigation.
-	const getValidPageSize = (size: number) =>
-		validPageSizes.includes(size) ? size : defaultPageSize;
+	const getValidPageSize = useCallback(
+		(size: number) => (validPageSizes.includes(size) ? size : defaultPageSize),
+		[validPageSizes, defaultPageSize],
+	);
 
 	const [pageSize, setPageSizeState] = useState<number>(
 		getValidPageSize(initial.pageSize ?? defaultPageSize),
@@ -121,6 +170,15 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 
 	const setFilter = useCallback(
 		(field: string, value: ActiveFilterValue | undefined) => {
+			if (isManualFilterSync) {
+				setFilters((prev) => {
+					const next = prev.filter((f) => f.field !== field);
+					if (value) next.push(value);
+					return next;
+				});
+				return;
+			}
+
 			const { sort: s, pageSize: ps } = stateRef.current;
 			setFilters((prev) => {
 				const next = prev.filter((f) => f.field !== field);
@@ -130,11 +188,16 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 			});
 			resetPagination();
 		},
-		[resetPagination],
+		[isManualFilterSync, resetPagination],
 	);
 
 	const removeFilter = useCallback(
 		(field: string) => {
+			if (isManualFilterSync) {
+				setFilters((prev) => prev.filter((f) => f.field !== field));
+				return;
+			}
+
 			const { sort: s, pageSize: ps } = stateRef.current;
 			setFilters((prev) => {
 				const next = prev.filter((f) => f.field !== field);
@@ -143,8 +206,16 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 			});
 			resetPagination();
 		},
-		[resetPagination],
+		[isManualFilterSync, resetPagination],
 	);
+
+	const applyFilters = useCallback(() => {
+		if (!isManualFilterSync) return;
+		const { filters: nextFilters, sort: s, pageSize: ps } = stateRef.current;
+		setAppliedFilters(nextFilters);
+		resetPagination();
+		syncToUrl(nextFilters, s, ps);
+	}, [isManualFilterSync, resetPagination, syncToUrl]);
 
 	// -- Sort callback ----------------------------------------------------------
 
@@ -162,11 +233,12 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 
 	const resetAll = useCallback(() => {
 		setFilters([]);
+		setAppliedFilters([]);
 		setLocalSort(null);
 		resetPagination();
 		syncToUrl([], null, defaultPageSize, 0);
 		setPageSizeState(defaultPageSize);
-	}, [syncToUrl, resetPagination]);
+	}, [syncToUrl, resetPagination, defaultPageSize]);
 
 	// -- Pagination callbacks ---------------------------------------------------
 	// Uses a cursor stack to track visited pages. "Next" pushes the current
@@ -204,15 +276,15 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 			resetPagination();
 			debouncedSyncRef.current(f, s, validated);
 		},
-		[resetPagination],
+		[resetPagination, getValidPageSize],
 	);
 
 	// -- Derived query objects ---------------------------------------------------
 	// Translate local filter/sort state into API-ready `where` and `orderBy`.
 
 	const where = useMemo(
-		() => buildFilter<TFilter>(filters, filterConfigs),
-		[filters, filterConfigs],
+		() => buildFilter<TFilter>(isManualFilterSync ? appliedFilters : filters, filterConfigs),
+		[appliedFilters, filters, filterConfigs, isManualFilterSync],
 	);
 
 	const orderBy = useMemo(() => buildOrderBy<TOrderBy>(sort), [sort]);
@@ -224,8 +296,21 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 	// causing unnecessary re-renders.
 
 	const filtersGroup = useMemo(
-		() => ({ active: filters, set: setFilter, remove: removeFilter }),
+		() => ({
+			active: filters,
+			set: setFilter,
+			remove: removeFilter,
+		}),
 		[filters, setFilter, removeFilter],
+	);
+
+	const filterState = useMemo(
+		() => ({
+			apply: applyFilters,
+			hasPendingChanges: isManualFilterSync ? !areFiltersEqual(filters, appliedFilters) : false,
+			hasValidationError: hasFilterValidationError(filters),
+		}),
+		[applyFilters, isManualFilterSync, filters, appliedFilters],
 	);
 
 	const sortGroup = useMemo(() => ({ current: sort, set: setSort }), [sort, setSort]);
@@ -239,6 +324,7 @@ export function useObjectSearchParams<TFilter, TOrderBy>(
 
 	return {
 		filters: filtersGroup,
+		filterState,
 		sort: sortGroup,
 		query,
 		pagination,

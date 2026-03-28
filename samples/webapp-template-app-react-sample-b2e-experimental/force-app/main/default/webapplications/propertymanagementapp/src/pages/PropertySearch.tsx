@@ -17,12 +17,13 @@ import type { Property__C_Filter, Property__C_OrderBy } from "../api/graphql-ope
 import { PageHeader } from "../components/layout/PageHeader";
 import { PageContainer } from "../components/layout/PageContainer";
 import {
+	FilterApplyButton,
 	FilterProvider,
 	FilterResetButton,
 } from "../features/object-search/components/FilterContext";
 import { FilterRow } from "../components/layout/FilterRow";
 import { SearchFilter } from "../features/object-search/components/filters/SearchFilter";
-import { SelectFilter } from "../features/object-search/components/filters/SelectFilter";
+import { MultiSelectFilter } from "../features/object-search/components/filters/MultiSelectFilter";
 import { NumericRangeFilter } from "../features/object-search/components/filters/NumericRangeFilter";
 import { ObjectSearchErrorState } from "../components/shared/ObjectSearchErrorState";
 import PaginationControls from "../features/object-search/components/PaginationControls";
@@ -30,6 +31,7 @@ import { PropertyCard } from "../components/properties/PropertyCard";
 import { PropertyDetailsModal } from "../components/properties/PropertyDetailsModal";
 import { Skeleton } from "../components/ui/skeleton";
 import { PAGINATION_CONFIG } from "../lib/constants";
+import { nonNegativeNumberInputProps } from "../lib/filterUtils";
 
 const FILTER_CONFIGS: FilterFieldConfig[] = [
 	{
@@ -65,10 +67,10 @@ export default function PropertySearch() {
 		ttl: 30_000,
 	});
 
-	const { filters, query, pagination, resetAll } = useObjectSearchParams<
+	const { filters, filterState, query, pagination, resetAll } = useObjectSearchParams<
 		Property__C_Filter,
 		Property__C_OrderBy
-	>(FILTER_CONFIGS, PROPERTY_SORT_CONFIGS, PAGINATION_CONFIG);
+	>(FILTER_CONFIGS, PROPERTY_SORT_CONFIGS, PAGINATION_CONFIG, { filterSyncMode: "manual" });
 
 	const searchKey = `properties:${JSON.stringify({ where: query.where, orderBy: query.orderBy, first: pagination.pageSize, after: pagination.afterCursor })}`;
 	const { data, loading, error } = useCachedAsyncData(
@@ -102,6 +104,7 @@ export default function PropertySearch() {
 				<PageHeader title="Properties" description="Browse and manage available properties" />
 				<PropertySearchFilters
 					filters={filters}
+					filterState={filterState}
 					statusOptions={statusOptions ?? []}
 					typeOptions={typeOptions ?? []}
 					resetAll={resetAll}
@@ -148,11 +151,13 @@ export default function PropertySearch() {
 
 function PropertySearchFilters({
 	filters,
+	filterState,
 	statusOptions,
 	typeOptions,
 	resetAll,
 }: {
 	filters: UseObjectSearchParamsReturn<Property__C_Filter, Property__C_OrderBy>["filters"];
+	filterState: UseObjectSearchParamsReturn<Property__C_Filter, Property__C_OrderBy>["filterState"];
 	statusOptions: Array<{ value: string; label: string }>;
 	typeOptions: Array<{ value: string; label: string }>;
 	resetAll: () => void;
@@ -163,6 +168,9 @@ function PropertySearchFilters({
 			onFilterChange={filters.set}
 			onFilterRemove={filters.remove}
 			onReset={resetAll}
+			onApply={filterState.apply}
+			hasPendingChanges={filterState.hasPendingChanges}
+			hasValidationError={filterState.hasValidationError}
 		>
 			<FilterRow ariaLabel="Properties filters">
 				<SearchFilter
@@ -171,13 +179,13 @@ function PropertySearchFilters({
 					placeholder="Search by name or address..."
 					className="w-full sm:w-50"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Status__c"
 					label="Status"
 					options={statusOptions}
 					className="w-full sm:w-36"
 				/>
-				<SelectFilter
+				<MultiSelectFilter
 					field="Type__c"
 					label="Type"
 					options={typeOptions}
@@ -187,8 +195,17 @@ function PropertySearchFilters({
 					field="Monthly_Rent__c"
 					label="Monthly Rent"
 					className="w-full sm:w-50"
+					minInputProps={nonNegativeNumberInputProps}
+					maxInputProps={nonNegativeNumberInputProps}
 				/>
-				<NumericRangeFilter field="Bedrooms__c" label="Bedrooms" className="w-full sm:w-50" />
+				<NumericRangeFilter
+					field="Bedrooms__c"
+					label="Bedrooms"
+					className="w-full sm:w-50"
+					minInputProps={nonNegativeNumberInputProps}
+					maxInputProps={nonNegativeNumberInputProps}
+				/>
+				<FilterApplyButton className="h-8 px-3 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed transition-colors" />
 				<FilterResetButton />
 			</FilterRow>
 		</FilterProvider>
