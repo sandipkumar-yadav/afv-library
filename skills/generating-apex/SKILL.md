@@ -20,7 +20,7 @@ Gather or infer before authoring:
 
 Defaults unless specified:
 - Sharing: `with sharing` (see sharing rules per type below)
-- Access: `public` (use `global` only when required by managed packages or `@InvocableMethod`)
+- Access: `public` (use `global` only when required by managed packages or `@RestResource`)
 - API version: `66.0` (minimum version)
 - ApexDoc comments: yes
 
@@ -93,7 +93,7 @@ If any constraint would be violated in generated code, **stop and explain the pr
 | Use bind variables for all dynamic SOQL with user input | Prevent SOQL injection |
 | Use Apex-native collections (`List`, `Map`, `Set`) rather than Java types | Prevent compile errors |
 | Verify methods exist in Apex before use | Prevent reliance on non-existent APIs |
-| Prefer structured logging over `System.debug()` | Debug string concatenation consumes CPU even when not observed |
+| Avoid `System.debug()` in main code paths | Debug statements evaluate even when loggign is not active and consume CPU. Use a logging framework if required on main code paths |
 | Never use `@future` methods | Use Queueable with `System.Finalizer`; `@future` cannot chain, cannot be called from Batch, and cannot accept non-primitive types |
 
 ### Bulkification & Governor Limits
