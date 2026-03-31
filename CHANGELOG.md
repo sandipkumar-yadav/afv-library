@@ -1,3 +1,12 @@
+# [1.6.0](https://github.com/forcedotcom/afv-library/compare/1.5.3...1.6.0) (2026-03-31)
+
+
+### Features
+
+* update theme layout creation instructions ([#122](https://github.com/forcedotcom/afv-library/issues/122)) ([30052ef](https://github.com/forcedotcom/afv-library/commit/30052ef628e80f6dbf29e89ae0c792dcc0fc5f37))
+
+
+
 ## [1.5.3](https://github.com/forcedotcom/afv-library/compare/1.5.2...1.5.3) (2026-03-31)
 
 
