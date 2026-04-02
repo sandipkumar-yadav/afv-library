@@ -274,11 +274,16 @@ After all phases complete, consolidate outputs into deployment-ready structure.
 
 ---
 
-### STEP 4: Deployment-Time Permission Set Suggestion
+### STEP 4: Deployment and Permission Set Suggestion Policy
 
-Whenever deployment is executed, you MUST include a suggestion that the user can assign generated permission set(s) to the current user.
+Deployment is user-triggered and permission guidance is suggestion-only.
 
+- Do NOT deploy automatically after generation.
+- After generation, present the task/build summary and wait for user instruction.
+- Deploy only when the user explicitly asks to deploy.
+- Whenever deployment is executed, include a suggestion that the user can assign generated permission set(s) to the current user.
 - Show this suggestion as part of the deployment response.
+- Do NOT assign permission sets directly in this step; provide suggestion only.
 - Include runnable command suggestion:
   - `sf org assign permset --name <PermissionSetApiName>`
 - If multiple permission sets were generated, include one command per permission set.
