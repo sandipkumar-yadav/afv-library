@@ -1,3 +1,12 @@
+# [1.15.0](https://github.com/forcedotcom/sf-skills/compare/1.14.0...1.15.0) (2026-06-12)
+
+
+### Features
+
+* manual trigger ([8357a9a](https://github.com/forcedotcom/sf-skills/commit/8357a9a7ff7d9ca59e5bb07d48e716970ea1abad))
+
+
+
 # [1.14.0](https://github.com/forcedotcom/sf-skills/compare/1.13.0...1.14.0) (2026-06-03)
 
 
