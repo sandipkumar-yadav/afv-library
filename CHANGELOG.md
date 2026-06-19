@@ -1,3 +1,12 @@
+# [1.18.0](https://github.com/forcedotcom/sf-skills/compare/1.17.0...1.18.0) (2026-06-19)
+
+
+### Features
+
+* release 3 new skills: configuring-code-analyzer, managing-cdc-enablement, using-salesforce-archive @W-23038011@ ([4965997](https://github.com/forcedotcom/sf-skills/commit/496599720c9505dbe886d2caaad4e99e8ebaff68))
+
+
+
 # [1.17.0](https://github.com/forcedotcom/sf-skills/compare/1.16.0...1.17.0) (2026-06-19)
 
 
