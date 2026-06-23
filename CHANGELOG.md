@@ -1,3 +1,12 @@
+# [1.20.0](https://github.com/forcedotcom/sf-skills/compare/1.19.0...1.20.0) (2026-06-23)
+
+
+### Features
+
+* release new skill: platform-agentexchange-partner-offers-enable (PRs [#490](https://github.com/forcedotcom/sf-skills/issues/490), [#579](https://github.com/forcedotcom/sf-skills/issues/579)) @W-23143960@ ([afd1a2d](https://github.com/forcedotcom/sf-skills/commit/afd1a2d8aa35db692269f3efaa2c1c50b16e0a7d))
+
+
+
 # [1.19.0](https://github.com/forcedotcom/sf-skills/compare/1.18.0...1.19.0) (2026-06-23)
 
 
