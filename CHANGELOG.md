@@ -1,3 +1,12 @@
+# [1.25.0](https://github.com/forcedotcom/sf-skills/compare/1.24.0...1.25.0) (2026-06-26)
+
+
+### Features
+
+* Release 8 new skills: commerce-b2b-open-code-components-replace, dx-org-manage, dx-org-permission-set-assign, platform-agentsetup-categories-fetch, platform-metadata-retrieve, platform-sharing-rules-generate, platform-tracing-agentforce-configure, platform-tracing-configure @W-23195013@ ([9fc0710](https://github.com/forcedotcom/sf-skills/commit/9fc07100ef294649b504890128a2d53a0662f248))
+
+
+
 # [1.24.0](https://github.com/forcedotcom/sf-skills/compare/1.23.0...1.24.0) (2026-06-26)
 
 
